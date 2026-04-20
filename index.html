@@ -203,6 +203,10 @@
             margin: 0;
             color: #2b6e2b;
         }
+        .finish-screen p {
+            font-size: 1.5rem;
+            margin: 10px 0;
+        }
         .again-button {
             background: #ffa047;
             font-size: 1.6rem;
@@ -266,7 +270,7 @@
     const svgSteering = () => `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="35" fill="none" stroke="#9B6A3C" stroke-width="7"/><circle cx="50" cy="50" r="10" fill="#9B6A3C"/><line x1="50" y1="15" x2="50" y2="35" stroke="#9B6A3C" stroke-width="7"/><line x1="50" y1="65" x2="50" y2="85" stroke="#9B6A3C" stroke-width="7"/><line x1="15" y1="50" x2="35" y2="50" stroke="#9B6A3C" stroke-width="7"/><line x1="65" y1="50" x2="85" y2="50" stroke="#9B6A3C" stroke-width="7"/></svg>`;
     const svgHeadlight = () => `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="#FFF1A0" stroke="#F4B41A" stroke-width="4"/><circle cx="50" cy="50" r="25" fill="#FFE770" stroke="#D4890A" stroke-width="3"/><rect x="40" y="15" width="20" height="15" fill="#D4AF37" rx="4"/><path d="M30,40 L70,40 L60,70 L40,70 Z" fill="#FFC107" opacity="0.5"/></svg>`;
 
-    // ---------- ЗВУКИ (файлы лежат рядом с HTML) ----------
+    // ---------- ЗВУКИ ----------
     function playSound(soundType) {
         let audio = new Audio();
         let soundFile = '';
@@ -381,8 +385,9 @@
         return arr;
     }
 
-    let questions = [];           // массив вопросов (перемешанные блоки)
-    let starEarned = [];         // для каждого вопроса: true если звезда уже получена (без ошибок)
+    let questions = [];
+    let starEarned = [];
+    let questionLocked = [];
     let currentIndex = 0;
     let waitingForNext = false;
     let gameFinished = false;
@@ -407,7 +412,6 @@
     function updateProgress() {
         if (gameFinished) {
             counterSpan.innerText = "Победа!";
-            starSpan.innerHTML = "🏆🏆🏆🏆🏆🏆🏆🏆🏆🏆🏆🏆🏆🏆🏆🏆🏆";
             return;
         }
         counterSpan.innerText = `Вопрос ${currentIndex+1} / ${questions.length}`;
@@ -468,8 +472,7 @@
                 if (waitingForNext || gameFinished) return;
                 const isCorrect = (opt.name === q.correct.name);
                 if (isCorrect) {
-                    // Если звезда ещё не получена за этот вопрос, зажигаем её
-                    if (!starEarned[currentIndex]) {
+                    if (!questionLocked[currentIndex] && !starEarned[currentIndex]) {
                         starEarned[currentIndex] = true;
                         updateStarsDisplay();
                     }
@@ -489,13 +492,12 @@
                         }
                     }, 1000);
                 } else {
-                    // Неправильный ответ — звезда за этот вопрос навсегда теряется
-                    if (!starEarned[currentIndex]) {
-                        starEarned[currentIndex] = false;   // явно false (оставляем)
+                    if (!questionLocked[currentIndex]) {
+                        questionLocked[currentIndex] = true;
+                        if (starEarned[currentIndex]) starEarned[currentIndex] = false;
                         updateStarsDisplay();
                     }
                     feedbackDiv.innerHTML = `❌ ${q.feedbackBad} ❌`; feedbackDiv.style.background = "#ffcfc2"; feedbackDiv.style.color = "#ac3a2e";
-                    // Даём возможность ответить снова, но звезда уже не загорится
                     setTimeout(() => { 
                         if (!waitingForNext && !gameFinished) { 
                             feedbackDiv.innerHTML = "👉 Попробуй ещё раз! Нажми на другую картинку."; 
@@ -510,21 +512,47 @@
     }
 
     function showFinish() {
-        clearAll(); qIconDiv.innerHTML = "🏆🎉🏆"; qTextSpan.innerHTML = "Ты молодец!";
-        const finishDiv = document.createElement("div"); finishDiv.className = "finish-screen";
-        finishDiv.innerHTML = `<h2>✨ ПОБЕДА! ✨</h2><p style="font-size:1.5rem;">Ты отлично знаешь транспорт!</p><button id="playAgainFinish" class="again-button">🚀 Играть снова 🚀</button>`;
-        optionsArea.appendChild(finishDiv); feedbackDiv.innerHTML = "🎈 Супер! Нажми кнопку, чтобы повторить. 🎈"; updateProgress();
-        const againBtn = document.getElementById("playAgainFinish"); if (againBtn) againBtn.addEventListener("click", () => fullRestart());
+        clearAll();
+        const totalStars = starEarned.filter(v => v === true).length;
+        const maxStars = questions.length;
+        
+        let message = "";
+        let emoji = "";
+        if (totalStars === maxStars) {
+            message = "Супер! Ты знаешь транспорт на отлично! 🌟🌟🌟";
+            emoji = "🏆✨🎉";
+        } else if (totalStars >= maxStars - 2) { // 15-16 звёзд
+            message = "Очень хорошо! Почти без ошибок! ⭐️⭐️";
+            emoji = "🎉⭐️";
+        } else if (totalStars >= maxStars - 5) { // 12-14 звёзд
+            message = "Хорошо, но будь внимательнее! ⭐️";
+            emoji = "👍⭐️";
+        } else {
+            message = "Ты можешь лучше! Попробуй ещё раз! 💪";
+            emoji = "💪😊";
+        }
+        
+        qIconDiv.innerHTML = emoji;
+        qTextSpan.innerHTML = `Ты набрал ${totalStars} из ${maxStars} звёзд!`;
+        const finishDiv = document.createElement("div");
+        finishDiv.className = "finish-screen";
+        finishDiv.innerHTML = `<h2>✨ ПОБЕДА! ✨</h2>
+                               <p>${message}</p>
+                               <button id="playAgainFinish" class="again-button">🚀 Играть снова 🚀</button>`;
+        optionsArea.appendChild(finishDiv);
+        feedbackDiv.innerHTML = "🎈 Супер! Нажми кнопку, чтобы повторить. 🎈";
+        updateProgress(); // чтобы звёзды отобразились финально
+        const againBtn = document.getElementById("playAgainFinish");
+        if (againBtn) againBtn.addEventListener("click", () => fullRestart());
     }
 
     function fullRestart() {
-        // Собираем вопросы: перемешиваем каждый блок отдельно, затем склеиваем
         const shuffledSounds = shuffleArray([...baseSoundQuestions]);
         const shuffledMoves = shuffleArray([...baseMoveQuestions]);
         const shuffledParts = shuffleArray([...basePartQuestions]);
         questions = [...shuffledSounds, ...shuffledMoves, ...shuffledParts];
-        // Инициализируем массив звёзд false
         starEarned = new Array(questions.length).fill(false);
+        questionLocked = new Array(questions.length).fill(false);
         currentIndex = 0;
         waitingForNext = false;
         gameFinished = false;
