@@ -237,10 +237,10 @@
 <body>
 <div class="game-container" id="gameRoot">
     <h1>🚦 Транспортная игра 🚜</h1>
-    <div style="text-align: center"><span class="sub">Слушай, смотри, отвечай!</span></div>
+    <div style="text-align: center"><span class="sub">Слушай, смотри, выбирай!</span></div>
     <div class="top-bar">
-        <div class="counter" id="questionCounter">Вопрос 1 / 14</div>
-        <div class="stars" id="starDisplay">⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️</div>
+        <div class="counter" id="questionCounter">Вопрос 1 / 17</div>
+        <div class="stars" id="starDisplay">⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️</div>
         <button class="restart-btn" id="restartGameBtn">🔄 Сначала</button>
     </div>
     <div class="question-card">
@@ -285,7 +285,6 @@
                     fb.style.background = "#fee3b5";
                 }, 3000);
             }
-            // fallback-синтез
             playFallbackSound(soundType);
         };
         audio.play().catch(e => {
@@ -294,7 +293,6 @@
         });
     }
 
-    // Синтезированные звуки на всякий случай (если файлы не загрузились)
     let activeCtx = null;
     function playFallbackSound(soundType) {
         try {
@@ -340,31 +338,62 @@
         } catch(e) { console.warn("Fallback audio error", e); }
     }
 
-    // ---------- ВОПРОСЫ (14 штук) ----------
-    const questions = [
-        // ЗВУКИ (8)
+    // ---------- БАЗОВЫЕ ВОПРОСЫ (без перемешивания) ----------
+    // Блок 1: ЗВУКИ (8 вопросов)
+    const baseSoundQuestions = [
         { type: 'sound', soundType: 'siren', correct: { emoji: "🚑", name: "Скорая помощь", cat: "drive" }, wrong: { emoji: "✈️", name: "Самолёт", cat: "fly" }, feedbackOk: "Правильно! Это сирена скорой! 🚑", feedbackBad: "Нет, это не самолёт. Это скорая помощь!" },
         { type: 'sound', soundType: 'bike', correct: { emoji: "🚲", name: "Велосипед", cat: "drive" }, wrong: { emoji: "🚤", name: "Лодка", cat: "swim" }, feedbackOk: "Верно! Велосипед звенит! 🚲", feedbackBad: "Не угадал. Это звонок велосипеда!" },
         { type: 'sound', soundType: 'steamship', correct: { emoji: "🚢", name: "Пароход", cat: "swim" }, wrong: { emoji: "🚁", name: "Вертолёт", cat: "fly" }, feedbackOk: "Молодец! Пароход гудит! 🚢", feedbackBad: "Нет, это пароход, а не вертолёт." },
-        { type: 'sound', soundType: 'car', correct: { emoji: "🚗", name: "Машина", cat: "drive" }, wrong: { emoji: "🚢", name: "Пароход", cat: "swim" }, feedbackOk: "Правильно! Машина сигналит! 🚗", feedbackBad: "Это не пароход. Это машина!" },
-        { type: 'sound', soundType: 'plane', correct: { emoji: "✈️", name: "Самолёт", cat: "fly" }, wrong: { emoji: "🚗", name: "Машина", cat: "drive" }, feedbackOk: "Отлично! Самолёт шумит! ✈️", feedbackBad: "Нет, это не машина. Это самолёт!" },
+        { type: 'sound', soundType: 'car', correct: { emoji: "🚗", name: "Машина", cat: "drive" }, wrong: { emoji: "🚢", name: "Пароход", cat: "swim" }, feedbackOk: "Правильно! Машина заводится! 🚗", feedbackBad: "Это не пароход. Это машина!" },
+        { type: 'sound', soundType: 'plane', correct: { emoji: "✈️", name: "Самолёт", cat: "fly" }, wrong: { emoji: "🚗", name: "Машина", cat: "drive" }, feedbackOk: "Отлично! Гул самолёта! ✈️", feedbackBad: "Нет, это не машина. Это самолёт!" },
         { type: 'sound', soundType: 'helicopter', correct: { emoji: "🚁", name: "Вертолёт", cat: "fly" }, wrong: { emoji: "🚲", name: "Велосипед", cat: "drive" }, feedbackOk: "Верно! Вертолёт стрекочет! 🚁", feedbackBad: "Велосипед звучит иначе. Это вертолёт!" },
-        { type: 'sound', soundType: 'train', correct: { emoji: "🚂", name: "Поезд", cat: "drive" }, wrong: { emoji: "🚤", name: "Лодка", cat: "swim" }, feedbackOk: "Умница! Поезд гудит! 🚂", feedbackBad: "Нет, это поезд, а не лодка." },
-        { type: 'sound', soundType: 'boat', correct: { emoji: "🚤", name: "Лодка", cat: "swim" }, wrong: { emoji: "✈️", name: "Самолёт", cat: "fly" }, feedbackOk: "Правильно! Лодка подаёт сигнал! 🚤", feedbackBad: "Не угадал. Это лодка, а не самолёт." },
-        // ДВИЖЕНИЕ (6)
+        { type: 'sound', soundType: 'train', correct: { emoji: "🚂", name: "Поезд", cat: "drive" }, wrong: { emoji: "🚤", name: "Лодка", cat: "swim" }, feedbackOk: "Умница! Поезд едет! 🚂", feedbackBad: "Нет, это поезд, а не лодка." },
+        { type: 'sound', soundType: 'boat', correct: { emoji: "🚤", name: "Лодка", cat: "swim" }, wrong: { emoji: "✈️", name: "Самолёт", cat: "fly" }, feedbackOk: "Правильно! Лодка подаёт сигнал! 🚤", feedbackBad: "Не угадал. Это лодка, а не самолёт." }
+    ];
+
+    // Блок 2: ДВИЖЕНИЕ (6 вопросов)
+    const baseMoveQuestions = [
         { type: 'move', moveCat: 'swim', questionText: "Что плывёт?", picto: "🌊🌊🌊", correct: { emoji: "🚤", name: "Лодка", cat: "swim" }, wrong: { emoji: "🚗", name: "Машина", cat: "drive" }, feedbackOk: "Молодец! Лодка плывёт! 🚤", feedbackBad: "Машина не плывёт. Выбери лодку!" },
         { type: 'move', moveCat: 'swim', questionText: "Что плывёт?", picto: "🌊🌊🌊", correct: { emoji: "🚢", name: "Пароход", cat: "swim" }, wrong: { emoji: "🚁", name: "Вертолёт", cat: "fly" }, feedbackOk: "Верно! Пароход плывёт! 🚢", feedbackBad: "Вертолёт летает, а плывёт пароход!" },
         { type: 'move', moveCat: 'fly', questionText: "Что летит?", picto: "☁️☁️☁️", correct: { emoji: "✈️", name: "Самолёт", cat: "fly" }, wrong: { emoji: "🚤", name: "Лодка", cat: "swim" }, feedbackOk: "Отлично! Самолёт летает! ✈️", feedbackBad: "Лодка не летает. Выбери самолёт!" },
         { type: 'move', moveCat: 'fly', questionText: "Что летит?", picto: "☁️☁️☁️", correct: { emoji: "🚁", name: "Вертолёт", cat: "fly" }, wrong: { emoji: "🚂", name: "Поезд", cat: "drive" }, feedbackOk: "Правильно! Вертолёт летает! 🚁", feedbackBad: "Поезд едет, а летает вертолёт!" },
         { type: 'move', moveCat: 'drive', questionText: "Что едет?", picto: "road", correct: { emoji: "🚗", name: "Машина", cat: "drive" }, wrong: { emoji: "🚢", name: "Пароход", cat: "swim" }, feedbackOk: "Верно! Машина едет по дороге! 🚗", feedbackBad: "Пароход плывёт, а едет машина!" },
-        { type: 'move', moveCat: 'drive', questionText: "Что едет?", picto: "road", correct: { emoji: "🚂", name: "Поезд", cat: "drive" }, wrong: { emoji: "✈️", name: "Самолёт", cat: "fly" }, feedbackOk: "Молодец! Поезд едет по рельсам! 🚂", feedbackBad: "Самолёт летает, а едет поезд!" },
-        // ДЕТАЛИ (3)
+        { type: 'move', moveCat: 'drive', questionText: "Что едет?", picto: "road", correct: { emoji: "🚂", name: "Поезд", cat: "drive" }, wrong: { emoji: "✈️", name: "Самолёт", cat: "fly" }, feedbackOk: "Молодец! Поезд едет по рельсам! 🚂", feedbackBad: "Самолёт летает, а едет поезд!" }
+    ];
+
+    // Блок 3: ДЕТАЛИ (3 вопроса)
+    const basePartQuestions = [
         { type: 'part', questionText: "Где руль?", correct: { svg: svgSteering(), name: "Руль" }, wrong: { svg: svgWheel(), name: "Колесо" }, feedbackOk: "Правильно! Это руль!", feedbackBad: "Нет, это не руль." },
         { type: 'part', questionText: "Где колесо?", correct: { svg: svgWheel(), name: "Колесо" }, wrong: { svg: svgHeadlight(), name: "Фара" }, feedbackOk: "Верно! Это колесо!", feedbackBad: "Это не колесо." },
         { type: 'part', questionText: "Где фара?", correct: { svg: svgHeadlight(), name: "Фара" }, wrong: { svg: svgSteering(), name: "Руль" }, feedbackOk: "Отлично! Это фара!", feedbackBad: "Нет, это не фара." }
     ];
 
-    let currentIndex = 0, waitingForNext = false, gameFinished = false;
+    // Функция перемешивания массива (Fisher-Yates)
+    function shuffleArray(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    // Глобальный массив вопросов (будет собран при старте)
+    let questions = [];
+
+    function buildShuffledQuestions() {
+        // Копируем базовые массивы и перемешиваем каждый
+        const shuffledSounds = shuffleArray([...baseSoundQuestions]);
+        const shuffledMoves = shuffleArray([...baseMoveQuestions]);
+        const shuffledParts = shuffleArray([...basePartQuestions]);
+        // Склеиваем в заданном порядке: сначала звуки, потом движение, потом детали
+        return [...shuffledSounds, ...shuffledMoves, ...shuffledParts];
+    }
+
+    // ---------- Управление игрой ----------
+    let currentIndex = 0;
+    let waitingForNext = false;
+    let gameFinished = false;
+
     const counterSpan = document.getElementById("questionCounter");
     const starSpan = document.getElementById("starDisplay");
     const qIconDiv = document.getElementById("questionIcon");
@@ -377,7 +406,7 @@
     function updateProgress() {
         if (gameFinished) {
             counterSpan.innerText = "Победа!";
-            starSpan.innerHTML = "🏆🏆🏆🏆🏆🏆🏆🏆🏆🏆🏆🏆🏆🏆";
+            starSpan.innerHTML = "🏆🏆🏆🏆🏆🏆🏆🏆🏆🏆🏆🏆🏆🏆🏆🏆🏆";
             return;
         }
         counterSpan.innerText = `Вопрос ${currentIndex+1} / ${questions.length}`;
@@ -463,8 +492,20 @@
         const againBtn = document.getElementById("playAgainFinish"); if (againBtn) againBtn.addEventListener("click", () => fullRestart());
     }
 
-    function fullRestart() { currentIndex = 0; waitingForNext = false; gameFinished = false; renderCurrent(); feedbackDiv.innerHTML = "👆 Нажми на картинку, чтобы ответить!"; feedbackDiv.style.background = "#fee3b5"; feedbackDiv.style.color = "#be5e00"; }
+    function fullRestart() {
+        // Пересобираем вопросы заново (каждый блок перемешивается отдельно)
+        questions = buildShuffledQuestions();
+        currentIndex = 0;
+        waitingForNext = false;
+        gameFinished = false;
+        renderCurrent();
+        feedbackDiv.innerHTML = "👆 Нажми на картинку, чтобы ответить!";
+        feedbackDiv.style.background = "#fee3b5";
+        feedbackDiv.style.color = "#be5e00";
+    }
+
     restartBtn.addEventListener("click", fullRestart);
+    // Инициализация
     fullRestart();
 </script>
 </body>
