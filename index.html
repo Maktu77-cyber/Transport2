@@ -29,6 +29,13 @@
             padding: 20px 18px 30px;
             border: 4px solid #ffcd94;
         }
+        .developer {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #a0682c;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
         h1 {
             font-size: 2.4rem;
             margin: 0 0 5px;
@@ -236,6 +243,7 @@
 </head>
 <body>
 <div class="game-container" id="gameRoot">
+    <div class="developer">Разработчик Макеева Т.С. | 2026</div>
     <h1>🚦 Транспортная игра 🚜</h1>
     <div style="text-align: center"><span class="sub">Слушай, смотри, выбирай!</span></div>
     <div class="top-bar">
@@ -338,7 +346,7 @@
         } catch(e) { console.warn("Fallback audio error", e); }
     }
 
-    // ---------- БАЗОВЫЕ ВОПРОСЫ (без перемешивания) ----------
+    // ---------- БАЗОВЫЕ ВОПРОСЫ ----------
     // Блок 1: ЗВУКИ (8 вопросов)
     const baseSoundQuestions = [
         { type: 'sound', soundType: 'siren', correct: { emoji: "🚑", name: "Скорая помощь", cat: "drive" }, wrong: { emoji: "✈️", name: "Самолёт", cat: "fly" }, feedbackOk: "Правильно! Это сирена скорой! 🚑", feedbackBad: "Нет, это не самолёт. Это скорая помощь!" },
@@ -348,7 +356,8 @@
         { type: 'sound', soundType: 'plane', correct: { emoji: "✈️", name: "Самолёт", cat: "fly" }, wrong: { emoji: "🚗", name: "Машина", cat: "drive" }, feedbackOk: "Отлично! Гул самолёта! ✈️", feedbackBad: "Нет, это не машина. Это самолёт!" },
         { type: 'sound', soundType: 'helicopter', correct: { emoji: "🚁", name: "Вертолёт", cat: "fly" }, wrong: { emoji: "🚲", name: "Велосипед", cat: "drive" }, feedbackOk: "Верно! Вертолёт стрекочет! 🚁", feedbackBad: "Велосипед звучит иначе. Это вертолёт!" },
         { type: 'sound', soundType: 'train', correct: { emoji: "🚂", name: "Поезд", cat: "drive" }, wrong: { emoji: "🚤", name: "Лодка", cat: "swim" }, feedbackOk: "Умница! Поезд едет! 🚂", feedbackBad: "Нет, это поезд, а не лодка." },
-        { type: 'sound', soundType: 'boat', correct: { emoji: "🚤", name: "Лодка", cat: "swim" }, wrong: { emoji: "✈️", name: "Самолёт", cat: "fly" }, feedbackOk: "Правильно! Лодка подаёт сигнал! 🚤", feedbackBad: "Не угадал. Это лодка, а не самолёт." }
+        // Лодка: убрали "подаёт сигнал", оставили "Лодка плывёт"
+        { type: 'sound', soundType: 'boat', correct: { emoji: "🚤", name: "Лодка", cat: "swim" }, wrong: { emoji: "✈️", name: "Самолёт", cat: "fly" }, feedbackOk: "Правильно! Лодка плывёт! 🚤", feedbackBad: "Не угадал. Это лодка, а не самолёт." }
     ];
 
     // Блок 2: ДВИЖЕНИЕ (6 вопросов)
@@ -368,7 +377,7 @@
         { type: 'part', questionText: "Где фара?", correct: { svg: svgHeadlight(), name: "Фара" }, wrong: { svg: svgSteering(), name: "Руль" }, feedbackOk: "Отлично! Это фара!", feedbackBad: "Нет, это не фара." }
     ];
 
-    // Функция перемешивания массива (Fisher-Yates)
+    // Функция перемешивания
     function shuffleArray(arr) {
         for (let i = arr.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -377,15 +386,12 @@
         return arr;
     }
 
-    // Глобальный массив вопросов (будет собран при старте)
     let questions = [];
 
     function buildShuffledQuestions() {
-        // Копируем базовые массивы и перемешиваем каждый
         const shuffledSounds = shuffleArray([...baseSoundQuestions]);
         const shuffledMoves = shuffleArray([...baseMoveQuestions]);
         const shuffledParts = shuffleArray([...basePartQuestions]);
-        // Склеиваем в заданном порядке: сначала звуки, потом движение, потом детали
         return [...shuffledSounds, ...shuffledMoves, ...shuffledParts];
     }
 
@@ -472,12 +478,28 @@
                     feedbackDiv.innerHTML = `✅ ${q.feedbackOk} ✅`; feedbackDiv.style.background = "#c8e6b5"; feedbackDiv.style.color = "#2b5e2b";
                     waitingForNext = true;
                     setTimeout(() => {
-                        if (currentIndex + 1 < questions.length) { currentIndex++; waitingForNext = false; renderCurrent(); feedbackDiv.innerHTML = "👉 Отлично! Следующий вопрос!"; feedbackDiv.style.background = "#fee3b5"; feedbackDiv.style.color = "#be5e00"; }
-                        else { gameFinished = true; showFinish(); }
+                        if (currentIndex + 1 < questions.length) { 
+                            currentIndex++; 
+                            waitingForNext = false; 
+                            renderCurrent(); 
+                            feedbackDiv.innerHTML = "👉 Отлично! Следующий вопрос!"; 
+                            feedbackDiv.style.background = "#fee3b5"; 
+                            feedbackDiv.style.color = "#be5e00"; 
+                        } else { 
+                            gameFinished = true; 
+                            showFinish(); 
+                        }
                     }, 1000);
                 } else {
                     feedbackDiv.innerHTML = `❌ ${q.feedbackBad} ❌`; feedbackDiv.style.background = "#ffcfc2"; feedbackDiv.style.color = "#ac3a2e";
-                    setTimeout(() => { if (!waitingForNext && !gameFinished) { feedbackDiv.innerHTML = "👉 Попробуй ещё раз! Нажми на другую картинку."; feedbackDiv.style.background = "#fee3b5"; feedbackDiv.style.color = "#be5e00"; } }, 1300);
+                    // Звездочка НЕ добавляется, так как currentIndex не меняется
+                    setTimeout(() => { 
+                        if (!waitingForNext && !gameFinished) { 
+                            feedbackDiv.innerHTML = "👉 Попробуй ещё раз! Нажми на другую картинку."; 
+                            feedbackDiv.style.background = "#fee3b5"; 
+                            feedbackDiv.style.color = "#be5e00"; 
+                        } 
+                    }, 1300);
                 }
             });
             optionsArea.appendChild(card);
@@ -493,7 +515,6 @@
     }
 
     function fullRestart() {
-        // Пересобираем вопросы заново (каждый блок перемешивается отдельно)
         questions = buildShuffledQuestions();
         currentIndex = 0;
         waitingForNext = false;
@@ -505,7 +526,6 @@
     }
 
     restartBtn.addEventListener("click", fullRestart);
-    // Инициализация
     fullRestart();
 </script>
 </body>
