@@ -347,7 +347,6 @@
     }
 
     // ---------- БАЗОВЫЕ ВОПРОСЫ ----------
-    // Блок 1: ЗВУКИ (8 вопросов)
     const baseSoundQuestions = [
         { type: 'sound', soundType: 'siren', correct: { emoji: "🚑", name: "Скорая помощь", cat: "drive" }, wrong: { emoji: "✈️", name: "Самолёт", cat: "fly" }, feedbackOk: "Правильно! Это сирена скорой! 🚑", feedbackBad: "Нет, это не самолёт. Это скорая помощь!" },
         { type: 'sound', soundType: 'bike', correct: { emoji: "🚲", name: "Велосипед", cat: "drive" }, wrong: { emoji: "🚤", name: "Лодка", cat: "swim" }, feedbackOk: "Верно! Велосипед звенит! 🚲", feedbackBad: "Не угадал. Это звонок велосипеда!" },
@@ -356,11 +355,9 @@
         { type: 'sound', soundType: 'plane', correct: { emoji: "✈️", name: "Самолёт", cat: "fly" }, wrong: { emoji: "🚗", name: "Машина", cat: "drive" }, feedbackOk: "Отлично! Гул самолёта! ✈️", feedbackBad: "Нет, это не машина. Это самолёт!" },
         { type: 'sound', soundType: 'helicopter', correct: { emoji: "🚁", name: "Вертолёт", cat: "fly" }, wrong: { emoji: "🚲", name: "Велосипед", cat: "drive" }, feedbackOk: "Верно! Вертолёт стрекочет! 🚁", feedbackBad: "Велосипед звучит иначе. Это вертолёт!" },
         { type: 'sound', soundType: 'train', correct: { emoji: "🚂", name: "Поезд", cat: "drive" }, wrong: { emoji: "🚤", name: "Лодка", cat: "swim" }, feedbackOk: "Умница! Поезд едет! 🚂", feedbackBad: "Нет, это поезд, а не лодка." },
-        // Лодка: убрали "подаёт сигнал", оставили "Лодка плывёт"
         { type: 'sound', soundType: 'boat', correct: { emoji: "🚤", name: "Лодка", cat: "swim" }, wrong: { emoji: "✈️", name: "Самолёт", cat: "fly" }, feedbackOk: "Правильно! Лодка плывёт! 🚤", feedbackBad: "Не угадал. Это лодка, а не самолёт." }
     ];
 
-    // Блок 2: ДВИЖЕНИЕ (6 вопросов)
     const baseMoveQuestions = [
         { type: 'move', moveCat: 'swim', questionText: "Что плывёт?", picto: "🌊🌊🌊", correct: { emoji: "🚤", name: "Лодка", cat: "swim" }, wrong: { emoji: "🚗", name: "Машина", cat: "drive" }, feedbackOk: "Молодец! Лодка плывёт! 🚤", feedbackBad: "Машина не плывёт. Выбери лодку!" },
         { type: 'move', moveCat: 'swim', questionText: "Что плывёт?", picto: "🌊🌊🌊", correct: { emoji: "🚢", name: "Пароход", cat: "swim" }, wrong: { emoji: "🚁", name: "Вертолёт", cat: "fly" }, feedbackOk: "Верно! Пароход плывёт! 🚢", feedbackBad: "Вертолёт летает, а плывёт пароход!" },
@@ -370,14 +367,12 @@
         { type: 'move', moveCat: 'drive', questionText: "Что едет?", picto: "road", correct: { emoji: "🚂", name: "Поезд", cat: "drive" }, wrong: { emoji: "✈️", name: "Самолёт", cat: "fly" }, feedbackOk: "Молодец! Поезд едет по рельсам! 🚂", feedbackBad: "Самолёт летает, а едет поезд!" }
     ];
 
-    // Блок 3: ДЕТАЛИ (3 вопроса)
     const basePartQuestions = [
         { type: 'part', questionText: "Где руль?", correct: { svg: svgSteering(), name: "Руль" }, wrong: { svg: svgWheel(), name: "Колесо" }, feedbackOk: "Правильно! Это руль!", feedbackBad: "Нет, это не руль." },
         { type: 'part', questionText: "Где колесо?", correct: { svg: svgWheel(), name: "Колесо" }, wrong: { svg: svgHeadlight(), name: "Фара" }, feedbackOk: "Верно! Это колесо!", feedbackBad: "Это не колесо." },
         { type: 'part', questionText: "Где фара?", correct: { svg: svgHeadlight(), name: "Фара" }, wrong: { svg: svgSteering(), name: "Руль" }, feedbackOk: "Отлично! Это фара!", feedbackBad: "Нет, это не фара." }
     ];
 
-    // Функция перемешивания
     function shuffleArray(arr) {
         for (let i = arr.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -386,16 +381,8 @@
         return arr;
     }
 
-    let questions = [];
-
-    function buildShuffledQuestions() {
-        const shuffledSounds = shuffleArray([...baseSoundQuestions]);
-        const shuffledMoves = shuffleArray([...baseMoveQuestions]);
-        const shuffledParts = shuffleArray([...basePartQuestions]);
-        return [...shuffledSounds, ...shuffledMoves, ...shuffledParts];
-    }
-
-    // ---------- Управление игрой ----------
+    let questions = [];           // массив вопросов (перемешанные блоки)
+    let starEarned = [];         // для каждого вопроса: true если звезда уже получена (без ошибок)
     let currentIndex = 0;
     let waitingForNext = false;
     let gameFinished = false;
@@ -409,6 +396,14 @@
     const feedbackDiv = document.getElementById("feedbackMsg");
     const restartBtn = document.getElementById("restartGameBtn");
 
+    function updateStarsDisplay() {
+        let starsHtml = "";
+        for (let i = 0; i < questions.length; i++) {
+            starsHtml += starEarned[i] ? "⭐️" : "☆";
+        }
+        starSpan.innerHTML = starsHtml;
+    }
+
     function updateProgress() {
         if (gameFinished) {
             counterSpan.innerText = "Победа!";
@@ -416,9 +411,7 @@
             return;
         }
         counterSpan.innerText = `Вопрос ${currentIndex+1} / ${questions.length}`;
-        let stars = "";
-        for (let i=0; i<questions.length; i++) stars += (i < currentIndex) ? "⭐️" : "☆";
-        starSpan.innerHTML = stars;
+        updateStarsDisplay();
     }
 
     function clearAll() { optionsArea.innerHTML = ""; dynamicZone.innerHTML = ""; }
@@ -475,6 +468,11 @@
                 if (waitingForNext || gameFinished) return;
                 const isCorrect = (opt.name === q.correct.name);
                 if (isCorrect) {
+                    // Если звезда ещё не получена за этот вопрос, зажигаем её
+                    if (!starEarned[currentIndex]) {
+                        starEarned[currentIndex] = true;
+                        updateStarsDisplay();
+                    }
                     feedbackDiv.innerHTML = `✅ ${q.feedbackOk} ✅`; feedbackDiv.style.background = "#c8e6b5"; feedbackDiv.style.color = "#2b5e2b";
                     waitingForNext = true;
                     setTimeout(() => {
@@ -491,8 +489,13 @@
                         }
                     }, 1000);
                 } else {
+                    // Неправильный ответ — звезда за этот вопрос навсегда теряется
+                    if (!starEarned[currentIndex]) {
+                        starEarned[currentIndex] = false;   // явно false (оставляем)
+                        updateStarsDisplay();
+                    }
                     feedbackDiv.innerHTML = `❌ ${q.feedbackBad} ❌`; feedbackDiv.style.background = "#ffcfc2"; feedbackDiv.style.color = "#ac3a2e";
-                    // Звездочка НЕ добавляется, так как currentIndex не меняется
+                    // Даём возможность ответить снова, но звезда уже не загорится
                     setTimeout(() => { 
                         if (!waitingForNext && !gameFinished) { 
                             feedbackDiv.innerHTML = "👉 Попробуй ещё раз! Нажми на другую картинку."; 
@@ -515,7 +518,13 @@
     }
 
     function fullRestart() {
-        questions = buildShuffledQuestions();
+        // Собираем вопросы: перемешиваем каждый блок отдельно, затем склеиваем
+        const shuffledSounds = shuffleArray([...baseSoundQuestions]);
+        const shuffledMoves = shuffleArray([...baseMoveQuestions]);
+        const shuffledParts = shuffleArray([...basePartQuestions]);
+        questions = [...shuffledSounds, ...shuffledMoves, ...shuffledParts];
+        // Инициализируем массив звёзд false
+        starEarned = new Array(questions.length).fill(false);
         currentIndex = 0;
         waitingForNext = false;
         gameFinished = false;
